@@ -11,8 +11,8 @@
 #include "macros.h"
 #include "big_integer.h"
 
-/*#define UINT_NUM_BITS		(32)*/
-#define UINT_NUM_BITS		(sizeof(unsigned int) * 8)
+/*#define UINT_NUM_BITS		(sizeof(unsigned int) * 8)*/
+const int UINT_NUM_BITS =	(sizeof(unsigned int) * 8);
 
 
 /* PRIVATE FUNCTIONS DECLARATIONS */
