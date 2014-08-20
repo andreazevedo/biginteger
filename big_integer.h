@@ -3,17 +3,22 @@
 
 /*
 ** big_integer.h
-**     Description: Arbitrary-precision integer
+**     Description: "Arbitrary"-precision integer
 **     Author: Andre Azevedo <http://github.com/andreazevedo>
 **/
 
 #define BIG_INTEGER_DATA_MAX_SIZE	8
 
+typedef struct BigIntegerData
+{
+	unsigned int bits[BIG_INTEGER_DATA_MAX_SIZE];
+	int length;
+} BigIntegerData;
+
 typedef struct BigInteger 
 {
 	char sign;
-	unsigned int data[BIG_INTEGER_DATA_MAX_SIZE];
-	int length;
+	BigIntegerData data;
 } BigInteger;
 
 /* creates a big integer number */

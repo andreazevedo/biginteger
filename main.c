@@ -16,7 +16,7 @@ void dump_debug_info()
 	printf("\nINT_MAX + INT_MAX + 5:\n");
 	big_integer_dump( big_integer_create( (long long)INT_MAX + INT_MAX + 5 ) );
 	printf("\n");
-}
+};
 #endif
 
 void test_create()
@@ -209,6 +209,133 @@ void test_add()
 	right = big_integer_create( -5 );
 	result = big_integer_add( left, right );
 	assert( big_integer_to_int(result) == -5 );
+
+	left = big_integer_create( 18 );
+	right = big_integer_create( -3 );
+	result = big_integer_add( left, right );
+	assert( big_integer_to_int(result) == 15 );
+
+	left = big_integer_create( -18 );
+	right = big_integer_create( +3 );
+	result = big_integer_add( left, right );
+	assert( big_integer_to_int(result) == -15 );
+
+	left = big_integer_create( -(long long)UINT_MAX - UINT_MAX );
+	right = big_integer_create( +UINT_MAX );
+	result = big_integer_add( left, right );
+	assert( big_integer_to_long_long(result) == -(long long)UINT_MAX );
+
+	left = big_integer_create( (long long) UINT_MAX + UINT_MAX + UINT_MAX );
+	right = big_integer_create( -(long long)UINT_MAX - UINT_MAX );
+	result = big_integer_add( left, right );
+	assert( big_integer_to_long_long(result) == (long long)UINT_MAX );
+};
+
+void test_subtract()
+{
+	BigInteger left;
+	BigInteger right;
+	BigInteger result;
+
+	left = big_integer_create( 18 );
+	right = big_integer_create( 3 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == 15 );
+
+	left = big_integer_create( INT_MAX );
+	right = big_integer_create( 5 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == ((long long)INT_MAX - 5) );
+
+	left = big_integer_create( UINT_MAX );
+	right = big_integer_create( 1 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == ((long long)UINT_MAX - 1) );
+
+	left = big_integer_create( UINT_MAX );
+	right = big_integer_create( 5 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == ((long long)UINT_MAX - 5) );
+
+	left = big_integer_create( UINT_MAX );
+	right = big_integer_create( UINT_MAX );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == 0 );
+
+	left = big_integer_create( (long long)UINT_MAX + UINT_MAX );
+	right = big_integer_create( UINT_MAX );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == ((long long)UINT_MAX) );
+
+	left = big_integer_create( -18 );
+	right = big_integer_create( -3 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == -15 );
+
+	left = big_integer_create(  -(long long)UINT_MAX );
+	right = big_integer_create( -1 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == (-(long long)UINT_MAX + 1) );
+
+	left = big_integer_create( -(long long)UINT_MAX );
+	right = big_integer_create( -5 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == (-(long long)UINT_MAX + 5) );
+
+	left = big_integer_create( -(long long)UINT_MAX );
+	right = big_integer_create( -(long long)UINT_MAX );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == 0 );
+
+	left = big_integer_create( -(long long)UINT_MAX - UINT_MAX );
+	right = big_integer_create( -(long long)UINT_MAX );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == (-(long long)UINT_MAX) );
+
+	left = big_integer_create( 5 );
+	right = big_integer_create( 0 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == 5 );
+
+	left = big_integer_create( 0 );
+	right = big_integer_create( 5 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == -5 );
+
+	left = big_integer_create( 0 );
+	right = big_integer_create( 0 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == 0 );
+
+	left = big_integer_create( -5 );
+	right = big_integer_create( 0 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == -5 );
+
+	left = big_integer_create( 0 );
+	right = big_integer_create( -5 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == 5 );
+
+	left = big_integer_create( 18 );
+	right = big_integer_create( -3 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == 21 );
+
+	left = big_integer_create( -18 );
+	right = big_integer_create( +3 );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_int(result) == -21 );
+
+	left = big_integer_create( -(long long)UINT_MAX - UINT_MAX );
+	right = big_integer_create( +UINT_MAX );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == -(long long)UINT_MAX - UINT_MAX - UINT_MAX );
+
+	left = big_integer_create( (long long) UINT_MAX + UINT_MAX + UINT_MAX );
+	right = big_integer_create( -(long long)UINT_MAX - UINT_MAX );
+	result = big_integer_subtract( left, right );
+	assert( big_integer_to_long_long(result) == (long long)UINT_MAX + UINT_MAX + UINT_MAX + UINT_MAX + UINT_MAX );
 };
 
 int main(int argc, const char **argv)
@@ -221,6 +348,7 @@ int main(int argc, const char **argv)
 	test_to_long_long();
 	test_compare();
 	test_add();
+	test_subtract();
 
 	printf("All tests passed!\n");
 	return EXIT_SUCCESS;
