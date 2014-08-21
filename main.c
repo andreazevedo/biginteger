@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <math.h>
+#include <time.h>
 #include "macros.h"
 #include "big_integer.h"
 
@@ -338,6 +339,78 @@ void test_subtract()
 	assert( big_integer_to_long_long(result) == (long long)UINT_MAX + UINT_MAX + UINT_MAX + UINT_MAX + UINT_MAX );
 };
 
+void test_increment()
+{
+	BigInteger bigInt;
+
+	bigInt = big_integer_create( 10 );
+	big_integer_increment( &bigInt, 5 );
+	assert( big_integer_to_long_long(bigInt) == 15 );
+
+	bigInt = big_integer_create( -5 );
+	big_integer_increment( &bigInt, 10 );
+	assert( big_integer_to_long_long(bigInt) == 5 );
+
+	bigInt = big_integer_create( 0 );
+	big_integer_increment( &bigInt, 0 );
+	assert( big_integer_to_long_long(bigInt) == 0 );
+
+	bigInt = big_integer_create( 0 );
+	big_integer_increment( &bigInt, 3 );
+	assert( big_integer_to_long_long(bigInt) == 3 );
+
+	bigInt = big_integer_create( -15 );
+	big_integer_increment( &bigInt, 15 );
+	assert( big_integer_to_long_long(bigInt) == 0 );
+
+	bigInt = big_integer_create( UINT_MAX );
+	big_integer_increment( &bigInt, 1 );
+	assert( big_integer_to_long_long(bigInt) == (long long)UINT_MAX + 1 );
+
+	bigInt = big_integer_create( UINT_MAX );
+	big_integer_increment( &bigInt, UINT_MAX );
+	assert( big_integer_to_long_long(bigInt) == (long long)UINT_MAX + UINT_MAX );
+
+	bigInt = big_integer_create( (long long)UINT_MAX + UINT_MAX );
+	big_integer_increment( &bigInt, 15 );
+	assert( big_integer_to_long_long(bigInt) == (long long)UINT_MAX + UINT_MAX + 15 );
+
+	bigInt = big_integer_create( -(long long)UINT_MAX - 15 );
+	big_integer_increment( &bigInt, 15 );
+	assert( big_integer_to_long_long(bigInt) == -(long long)UINT_MAX );
+};
+
+void test_performance()
+{
+	int NUM_ITERATIONS = 1000000;
+
+	clock_t start;
+	clock_t end;
+	double cpuTime;
+
+	long long l;
+	start = clock();
+	BigInteger sumBigInt = big_integer_create( 0 );
+	for ( l = 1; l <= NUM_ITERATIONS; ++l )
+	{		
+		big_integer_increment( &sumBigInt, (unsigned int) l );
+	}
+	end = clock();
+	cpuTime = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("BigInteger made %d add operations in %f seconds.\n", NUM_ITERATIONS, cpuTime);
+	printf("BigInteger last value was: %lld\n", big_integer_to_long_long(sumBigInt));
+
+	double d;
+	start = clock();
+	double sumDouble = 0;
+	for ( d = 1; d <= NUM_ITERATIONS; ++d )
+		sumDouble = sumDouble + d;
+	end = clock();
+	cpuTime = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("Double made %d add operations in %f seconds.\n", NUM_ITERATIONS, cpuTime);
+	printf("Double last value was: %f\n", sumDouble);
+};
+
 int main(int argc, const char **argv)
 {
 #ifdef DEBUG
@@ -349,6 +422,10 @@ int main(int argc, const char **argv)
 	test_compare();
 	test_add();
 	test_subtract();
+	test_increment();
+#ifdef DEBUG
+	test_performance();
+#endif
 
 	printf("All tests passed!\n");
 	return EXIT_SUCCESS;

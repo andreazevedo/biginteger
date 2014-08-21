@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
+#include <assert.h>
 #include "macros.h"
 #include "big_integer.h"
 
@@ -24,8 +25,11 @@ void big_integer_normalize_from( BigIntegerData *pBigIntData, const int from );
 void big_integer_clear_trash_data( BigIntegerData *pBigIntData );
 void big_integer_report_overflow();
 int big_integer_compare_data( const BigIntegerData *pLeft, const BigIntegerData *pRight );
+int big_integer_compare_data_uint( const BigIntegerData *pBigIntData, unsigned int value );
 BigIntegerData big_integer_add_data( const BigIntegerData left, const BigIntegerData right );
 BigIntegerData big_integer_subtract_data( const BigIntegerData left, const BigIntegerData right );
+void big_integer_increment_data( BigIntegerData *pBigIntData, const unsigned int value );
+void big_integer_decrement_data( BigIntegerData *pBigIntData, const unsigned int value );
 
 
 /* PRIVATE FUNCTIONS IMPLEMENTATION */
@@ -116,6 +120,21 @@ int big_integer_compare_data( const BigIntegerData *pLeft, const BigIntegerData 
 	return 0;
 };
 
+int big_integer_compare_data_uint( const BigIntegerData *pBigIntData, unsigned int value )
+{
+	if ( pBigIntData->length == 0 )
+		return -1;
+	if ( pBigIntData->length > 1 )
+		return 1;
+
+	if ( pBigIntData->bits[0] > value )
+		return 1;
+	else if ( pBigIntData->bits[0] < value )
+		return -1;
+
+	return 0;
+};
+
 BigIntegerData big_integer_add_data( const BigIntegerData left, const BigIntegerData right )
 {
 	int uIntNumBits = UINT_NUM_BITS;
@@ -147,27 +166,61 @@ BigIntegerData big_integer_add_data( const BigIntegerData left, const BigInteger
 /* left > right always */
 BigIntegerData big_integer_subtract_data( const BigIntegerData left, const BigIntegerData right )
 {
-	int uIntNumBits = UINT_NUM_BITS;
-
 	BigIntegerData result = big_integer_empty_data( );
 
 	int len = MAX( left.length, right.length );
 
-	unsigned long long leftValue;
 	unsigned long long borrow = 0;
 	int i;
 	for ( i = 0; i < len; ++i )
 	{
-		borrow >>= uIntNumBits; /* in this cycle, borrow is worth UINT_NUM_BITS less */
-		leftValue = left.bits[i] - borrow;
-		
-		borrow = ( leftValue < right.bits[i] ) ? ((unsigned long long) 1 << uIntNumBits) : 0;
-		result.bits[i] = (leftValue + borrow) - right.bits[i];
+		/* what happens here is that, if left is less than right, borrow will become 
+		   "negative" (not really because it is unsigned), and the bit pattern for that is 
+		   the 1's complement (complementing it to get to 0), which is exactly the remainder
+		   of this term in the subtraction. */
+		borrow = (unsigned long long) left.bits[i] - right.bits[i] - borrow;
+
+		result.bits[i] = (unsigned int) borrow;
+
+		/* here we just want the first 1 after removing the lower order term */
+		borrow = (borrow >> UINT_NUM_BITS) & 1; 
 	}
 
 	big_integer_normalize_from( &result, i );
 
 	return result;
+};
+
+void big_integer_increment_data( BigIntegerData *pBigIntData, const unsigned int value )
+{
+	unsigned long long carry = value;
+	int i = 0;
+	while ( carry > 0 )
+	{
+		carry += pBigIntData->bits[i];
+		pBigIntData->bits[i] = (unsigned int) carry;
+		carry >>= UINT_NUM_BITS;
+		++i;
+	}
+
+	if ( i > pBigIntData->length )
+		pBigIntData->length = i;
+};
+
+/* pBigIntData > value */
+void big_integer_decrement_data( BigIntegerData *pBigIntData, const unsigned int value )
+{
+	unsigned long long borrow = value;
+	int i = 0;
+	while ( borrow > 0 )
+	{
+		borrow = (unsigned long long) pBigIntData->bits[i] - borrow;
+		pBigIntData->bits[i] = (unsigned int) borrow;
+		borrow = (borrow >> UINT_NUM_BITS) & 1;
+		++i;
+	}
+
+	big_integer_normalize_from( pBigIntData, i );
 };
 
 
@@ -316,6 +369,42 @@ BigInteger big_integer_subtract( const BigInteger left, const BigInteger right )
 		return big_integer_create_internal( left.sign, big_integer_subtract_data(left.data, right.data) );
 
 	return big_integer_create_internal( -right.sign, big_integer_subtract_data(right.data, left.data) );
+};
+
+void big_integer_increment( BigInteger *bigInt, const unsigned int value )
+{
+	if ( bigInt->sign >= 0 ) /* bigInt >= 0 */
+	{
+		if ( bigInt->sign == 0 && value > 0 )
+			bigInt->sign = 1;
+		big_integer_increment_data( &bigInt->data, value );
+	}
+	else /* bigInt < 0 */
+	{
+		int compRes = big_integer_compare_data_uint( &bigInt->data, value );
+
+		if ( compRes == 0 ) /* |bigInt| == |value| */
+		{
+			bigInt->sign = 0;
+			bigInt->data.length = 0;
+			big_integer_clear_trash_data( &bigInt->data );
+		}
+		else if ( compRes > 0 ) /* |bigInt| > |value| */
+		{
+			big_integer_decrement_data( &bigInt->data, value );
+		}
+		else /* |bigInt| < |value| */
+		{
+#ifdef DEBUG
+			/* |bigInt| < |value| implies that bigInt has length 1 or less 
+			   because value, if expressed as a BigInteger, would have length 1. */
+			assert( bigInt->data.length <= 1 );
+#endif
+			bigInt->sign = 1;
+			bigInt->data.bits[0] = value - bigInt->data.bits[0];
+			bigInt->data.length = 1;
+		}
+	}
 };
 
 #ifdef DEBUG

@@ -39,6 +39,9 @@ BigInteger big_integer_add( const BigInteger left, const BigInteger right );
 /* subtracts one big integer from another ( left - right ) */
 BigInteger big_integer_subtract( const BigInteger left, const BigInteger right );
 
+/* increments the bigInteger by the amount specified */
+void big_integer_increment( BigInteger *bigInt, const unsigned int value );
+
 
 #ifdef DEBUG
 void big_integer_dump( const BigInteger bigInt );
