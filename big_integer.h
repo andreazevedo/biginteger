@@ -42,6 +42,9 @@ BigInteger big_integer_subtract( const BigInteger left, const BigInteger right )
 /* increments the bigInteger by the amount specified */
 void big_integer_increment( BigInteger *bigInt, const unsigned int value );
 
+/* decrements the bigInteger by the amount specified */
+void big_integer_decrement( BigInteger *bigInt, const unsigned int value );
+
 
 #ifdef DEBUG
 void big_integer_dump( const BigInteger bigInt );

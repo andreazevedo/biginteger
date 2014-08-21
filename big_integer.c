@@ -197,7 +197,7 @@ void big_integer_increment_data( BigIntegerData *pBigIntData, const unsigned int
 	int i = 0;
 	while ( carry > 0 )
 	{
-		carry += pBigIntData->bits[i];
+		carry += (unsigned long long) pBigIntData->bits[i];
 		pBigIntData->bits[i] = (unsigned int) carry;
 		carry >>= UINT_NUM_BITS;
 		++i;
@@ -396,13 +396,47 @@ void big_integer_increment( BigInteger *bigInt, const unsigned int value )
 		else /* |bigInt| < |value| */
 		{
 #ifdef DEBUG
-			/* |bigInt| < |value| implies that bigInt has length 1 or less 
+			/* |bigInt| < |value| implies that bigInt has length 1
 			   because value, if expressed as a BigInteger, would have length 1. */
-			assert( bigInt->data.length <= 1 );
+			assert( bigInt->data.length == 1 );
 #endif
 			bigInt->sign = 1;
 			bigInt->data.bits[0] = value - bigInt->data.bits[0];
-			bigInt->data.length = 1;
+		}
+	}
+};
+
+void big_integer_decrement( BigInteger *bigInt, const unsigned int value )
+{
+	if ( bigInt->sign <= 0 )/* bigInt <= 0 */
+	{
+		if ( bigInt->sign == 0 && value > 0 )
+			bigInt->sign = -1;
+		big_integer_increment_data( &bigInt->data, value );
+	}
+	else /* bigInt > 0 */
+	{
+		int compRes = big_integer_compare_data_uint( &bigInt->data, value );
+
+		if ( compRes == 0 ) /* |bigInt| == |value| */
+		{
+			bigInt->sign = 0;
+			bigInt->data.length = 0;
+			big_integer_clear_trash_data( &bigInt->data );
+		}
+		else if ( compRes > 0 ) /* |bigInt| > |value| */
+		{
+			big_integer_decrement_data( &bigInt->data, value );
+		}
+		else /* |bigInt| < |value| */
+		{
+#ifdef DEBUG
+			/* |bigInt| < |value| implies that bigInt has length 1 or less 
+			   because value, if expressed as a BigInteger, would have length 1. */
+			assert( bigInt->data.length == 1 );
+#endif
+			bigInt->sign = -1;
+			bigInt->data.bits[0] = value - bigInt->data.bits[0];
 		}
 	}
 };
